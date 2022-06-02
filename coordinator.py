@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=15)
 
-REQUEST_REFRESH_DELAY = 3
+REQUEST_REFRESH_DELAY = 0.1
 
 
 class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
