@@ -219,6 +219,7 @@ class RadioThermostat(
 
     def _set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
+        _LOGGER.debug("Set fan mode: %s", fan_mode)
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
             self.device.fmode = code
 
@@ -268,6 +269,7 @@ class RadioThermostat(
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        _LOGGER.debug("Set temperature: %s", temperature)
         temperature = round_temp(temperature)
 
         if self.hvac_mode == HVACMode.COOL:
@@ -307,6 +309,7 @@ class RadioThermostat(
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
+        _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         if hvac_mode in (HVACMode.OFF, HVACMode.AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
 
@@ -323,6 +326,7 @@ class RadioThermostat(
 
     def _set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
+        _LOGGER.debug("Set preset mode: %s", preset_mode)
         if preset_mode not in PRESET_MODES:
             raise HomeAssistantError("{preset_mode} is not a valid preset_mode")
         self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
