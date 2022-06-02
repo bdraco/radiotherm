@@ -210,14 +210,16 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
-        await self.hass.async_add_executor_job(self._set_fan_mode, fan_mode)
+        if (code := FAN_MODE_TO_CODE.get(fan_mode)) is None:
+            raise HomeAssistantError(f"{fan_mode} is not a valid fan mode")
+        await self.hass.async_add_executor_job(self._set_fan_mode, code)
+        self._attr_fan_mode = fan_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
-    def _set_fan_mode(self, fan_mode: str) -> None:
+    def _set_fan_mode(self, code: int) -> None:
         """Turn fan on/off."""
-        _LOGGER.debug("Set fan mode: %s", fan_mode)
-        if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
-            self.device.fmode = code
+        self.device.fmode = code
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -258,13 +260,18 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.hass.async_add_executor_job(partial(self._set_temperature, **kwargs))
-        await self.coordinator.async_request_refresh()
-
-    def _set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        hold_changed = kwargs.get("hold_changed", False)
+        await self.hass.async_add_executor_job(
+            partial(self._set_temperature, temperature, hold_changed)
+        )
+        self._attr_target_temperature = temperature
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    def _set_temperature(self, temperature: int, hold_changed: bool) -> None:
+        """Set new target temperature."""
         _LOGGER.debug("Set temperature: %s", temperature)
         temperature = round_temp(temperature)
 
@@ -280,7 +287,7 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
 
         # Only change the hold if requested or if hold mode was turned
         # on and we haven't set it yet.
-        if kwargs.get("hold_changed", False) or not self._hold_set:
+        if hold_changed or not self._hold_set:
             if self._hold_temp:
                 self.device.hold = 1
                 self._hold_set = True
@@ -301,6 +308,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
         await self.hass.async_add_executor_job(self._set_hvac_mode, hvac_mode)
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -318,6 +327,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
         await self.hass.async_add_executor_job(self._set_preset_mode, preset_mode)
+        self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_preset_mode(self, preset_mode: str) -> None:
