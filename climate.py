@@ -1,7 +1,9 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 from __future__ import annotations
 
+from functools import partial
 import logging
+from typing import Any
 
 import radiotherm
 import voluptuous as vol
@@ -25,6 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -220,7 +223,12 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
             return CT80_FAN_OPERATION_LIST
         return CT30_FAN_OPERATION_LIST
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Turn fan on/off."""
+        await self.hass.async_add_executor_job(self._set_fan_mode, fan_mode)
+        await self.coordinator.async_request_refresh()
+
+    def _set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
             self.device.fmode = code
@@ -289,11 +297,15 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
             elif self._tstate == HVACAction.HEATING:
                 self._target_temperature = data["t_heat"]
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        await self.hass.async_add_executor_job(partial(self._set_temperature, **kwargs))
+        await self.coordinator.async_request_refresh()
+
+    def _set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-
         temperature = round_temp(temperature)
 
         if self._current_operation == HVACMode.COOL:
@@ -326,7 +338,12 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
             "minute": now.minute,
         }
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set operation mode (auto, cool, heat, off)."""
+        await self.hass.async_add_executor_job(self._set_hvac_mode, hvac_mode)
+        await self.coordinator.async_request_refresh()
+
+    def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
         if hvac_mode in (HVACMode.OFF, HVACMode.AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
@@ -337,12 +354,13 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             self.device.t_heat = self._target_temperature
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
-        if preset_mode in PRESET_MODES:
-            self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
-        else:
-            _LOGGER.error(
-                "Preset_mode %s not in PRESET_MODES",
-                preset_mode,
-            )
+        await self.hass.async_add_executor_job(self._set_preset_mode, preset_mode)
+        await self.coordinator.async_request_refresh()
+
+    def _set_preset_mode(self, preset_mode):
+        """Set Preset mode (Home, Alternate, Away, Holiday)."""
+        if preset_mode not in PRESET_MODES:
+            raise HomeAssistantError("{preset_mode} is not a valid preset_mode")
+        self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
