@@ -9,7 +9,6 @@ from radiotherm.thermostat import CommonThermostat
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @dataclass
@@ -30,15 +29,6 @@ class RadioThermInitData:
     model: str | None
     fw_version: str | None
     api_version: int | None
-
-
-@dataclass
-class RadioThermData:
-    """Data for the radiothem integration."""
-
-    coordinator: DataUpdateCoordinator[RadioThermUpdate]
-    init_data: RadioThermInitData
-    hold_temp: bool
 
 
 def _get_init_data(host: str) -> RadioThermInitData:

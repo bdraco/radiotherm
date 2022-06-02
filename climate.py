@@ -33,15 +33,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
 from .const import CONF_HOLD_TEMP
-from .data import RadioThermData, RadioThermUpdate
+from .coordinator import RadioThermUpdateCoordinator
+from .data import RadioThermUpdate
+from .models import RadioThermData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,9 +161,7 @@ async def async_setup_platform(
         )
 
 
-class RadioThermostat(
-    CoordinatorEntity[DataUpdateCoordinator[RadioThermUpdate]], ClimateEntity
-):
+class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
