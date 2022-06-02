@@ -45,6 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Discover via DHCP."""
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
         try:
             init_data = await validate_connection(self.hass, discovery_info.ip)
         except CannotConnect:
@@ -86,6 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import from yaml."""
         host = import_info[CONF_HOST]
+        self._async_abort_entries_match({CONF_HOST: host})
         _LOGGER.debug("Importing entry for host: %s", host)
         try:
             init_data = await validate_connection(self.hass, host)
