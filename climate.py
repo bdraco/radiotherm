@@ -24,7 +24,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -33,6 +33,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import DOMAIN
 from .const import CONF_HOLD_TEMP
 from .data import RadioThermData, RadioThermUpdate
 
