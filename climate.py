@@ -207,6 +207,7 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
         # temperature in the thermostat.  So add it as a future job
         # for the event loop to run.
         self.hass.async_add_job(self.set_time)
+        await super().async_added_to_hass()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
