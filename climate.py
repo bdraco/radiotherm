@@ -181,6 +181,7 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
         self._prev_temp = None
         self._program_mode: int | None = None
         self._is_away = False
+        self._attr_unique_id = data.init_data.mac
         self._attr_device_info = DeviceInfo(
             name=data.init_data.name,
             model=data.init_data.model,
