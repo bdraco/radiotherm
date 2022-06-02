@@ -213,8 +213,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is None:
             raise HomeAssistantError(f"{fan_mode} is not a valid fan mode")
         await self.hass.async_add_executor_job(self._set_fan_mode, code)
-        #        self._attr_fan_mode = fan_mode
-        #        self.async_write_ha_state()
+        self._attr_fan_mode = fan_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_fan_mode(self, code: int) -> None:
@@ -266,8 +266,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
         await self.hass.async_add_executor_job(
             partial(self._set_temperature, temperature, hold_changed)
         )
-        #        self._attr_target_temperature = temperature
-        #        self.async_write_ha_state()
+        self._attr_target_temperature = temperature
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_temperature(self, temperature: int, hold_changed: bool) -> None:
@@ -306,8 +306,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
         await self.hass.async_add_executor_job(self._set_hvac_mode, hvac_mode)
-        #        self._attr_hvac_mode = hvac_mode
-        #        self.async_write_ha_state()
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -325,8 +325,8 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
         if preset_mode not in PRESET_MODES:
             raise HomeAssistantError("{preset_mode} is not a valid preset_mode")
         await self.hass.async_add_executor_job(self._set_preset_mode, preset_mode)
-        #        self._attr_preset_mode = preset_mode
-        #        self.async_write_ha_state()
+        self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _set_preset_mode(self, preset_mode: str) -> None:
