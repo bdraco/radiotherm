@@ -24,19 +24,16 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
     """DataUpdateCoordinator to gather data for radio thermostats."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        host: str,
-        init_data: RadioThermInitData,
+        self, hass: HomeAssistant, init_data: RadioThermInitData, hold_temp: bool
     ) -> None:
         """Initialize DataUpdateCoordinator."""
-        self.device = init_data.tstat
-        self.host = host
-        self.name = init_data.name
+        self.init_data = init_data
+        self.hold_temp = hold_temp
+        self._description = f"{init_data.name} ({init_data.host})"
         super().__init__(
             hass,
             _LOGGER,
-            name=f"radiotherm {self.name}",
+            name=f"radiotherm {self.init_data.name}",
             update_interval=UPDATE_INTERVAL,
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
@@ -48,12 +45,12 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
     async def _async_update_data(self) -> RadioThermUpdate:
         """Update data from the thermostat."""
         try:
-            return await async_get_data(self.hass, self.device)
+            return await async_get_data(self.hass, self.init_data.tstat)
         except RadiothermTstatError as ex:
             raise UpdateFailed(
-                f"{self.name} ({self.host}) was busy (invalid value returned): {ex}"
+                f"{self._description} was busy (invalid value returned): {ex}"
             ) from ex
         except timeout as ex:
             raise UpdateFailed(
-                f"{self.name} ({self.host}) timed out waiting for a response: {ex}"
+                f"{self._description}) timed out waiting for a response: {ex}"
             ) from ex

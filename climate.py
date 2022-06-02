@@ -40,7 +40,6 @@ from . import DOMAIN
 from .const import CONF_HOLD_TEMP
 from .coordinator import RadioThermUpdateCoordinator
 from .data import RadioThermUpdate
-from .models import RadioThermData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,8 +118,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate for a radiotherm device."""
-    data: RadioThermData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([RadioThermostat(data)])
+    coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([RadioThermostat(coordinator)])
 
 
 async def async_setup_platform(
@@ -168,20 +167,20 @@ class RadioThermostat(CoordinatorEntity[RadioThermUpdateCoordinator], ClimateEnt
     _attr_temperature_unit = TEMP_FAHRENHEIT
     _attr_precision = PRECISION_HALVES
 
-    def __init__(self, data: RadioThermData) -> None:
+    def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the thermostat."""
-        super().__init__(data.coordinator)
-        self.device = data.init_data.tstat
-        self._attr_name = data.init_data.name
-        self._hold_temp = data.hold_temp
+        super().__init__(coordinator)
+        self.device = coordinator.init_data.tstat
+        self._attr_name = coordinator.init_data.name
+        self._hold_temp = coordinator.hold_temp
         self._hold_set = False
-        self._attr_unique_id = data.init_data.mac
+        self._attr_unique_id = coordinator.init_data.mac
         self._attr_device_info = DeviceInfo(
-            name=data.init_data.name,
-            model=data.init_data.model,
+            name=coordinator.init_data.name,
+            model=coordinator.init_data.model,
             manufacturer="Radio Thermostats",
-            sw_version=data.init_data.fw_version,
-            connections={(dr.CONNECTION_NETWORK_MAC, data.init_data.mac)},
+            sw_version=coordinator.init_data.fw_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.init_data.mac)},
         )
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
         self._attr_supported_features = (

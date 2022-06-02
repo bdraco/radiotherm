@@ -24,6 +24,7 @@ class RadioThermInitData:
     """An data needed to init the integration."""
 
     tstat: CommonThermostat
+    host: str
     name: str
     mac: str
     model: str | None
@@ -38,7 +39,7 @@ def _get_init_data(host: str) -> RadioThermInitData:
     mac: str = dr.format_mac(sys["uuid"])
     model: str = tstat.model.get("raw")
     return RadioThermInitData(
-        tstat, name, mac, model, sys.get("fw_version"), sys.get("api_version")
+        tstat, host, name, mac, model, sys.get("fw_version"), sys.get("api_version")
     )
 
 
