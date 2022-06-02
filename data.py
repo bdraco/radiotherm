@@ -10,6 +10,8 @@ from radiotherm.thermostat import CommonThermostat
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .const import TIMEOUT
+
 
 @dataclass
 class RadioThermUpdate:
@@ -34,6 +36,7 @@ class RadioThermInitData:
 
 def _get_init_data(host: str) -> RadioThermInitData:
     tstat = radiotherm.get_thermostat(host)
+    tstat.timeout = TIMEOUT
     name: str = tstat.name["raw"]
     sys: dict[str, Any] = tstat.sys["raw"]
     mac: str = dr.format_mac(sys["uuid"])
