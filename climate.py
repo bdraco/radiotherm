@@ -139,6 +139,7 @@ async def async_setup_platform(
         return
 
     hold_temp: bool = config[CONF_HOLD_TEMP]
+    _LOGGER.debug("Importing hosts: %s", hosts)
     for host in hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
