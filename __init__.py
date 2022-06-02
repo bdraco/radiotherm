@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hold_temp = entry.data[CONF_HOLD_TEMP]
+    hold_temp = entry.options[CONF_HOLD_TEMP]
     data = RadioThermData(coordinator, init_data, hold_temp)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

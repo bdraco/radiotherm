@@ -24,7 +24,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -191,6 +191,7 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
+        self._process_data()
 
     @property
     def data(self) -> RadioThermUpdate:
@@ -252,7 +253,13 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
         if self._program_mode == 3:
             return PRESET_HOLIDAY
 
+    @callback
     def _handle_coordinator_update(self) -> None:
+        self._process_data()
+        return super()._handle_coordinator_update()
+
+    @callback
+    def _process_data(self) -> None:
         """Update and validate the data from the thermostat."""
         data = self.data.tstat
         if self._is_model_ct80:
@@ -280,7 +287,6 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
                 self._target_temperature = data["t_cool"]
             elif self._tstate == HVACAction.HEATING:
                 self._target_temperature = data["t_heat"]
-        return super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

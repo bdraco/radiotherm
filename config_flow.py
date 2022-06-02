@@ -66,7 +66,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert init_data is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=init_data.name, data={CONF_HOST: ip_address}
+                title=init_data.name,
+                data={CONF_HOST: ip_address},
+                options={CONF_HOLD_TEMP: False},
             )
 
         self._set_confirm_only()
@@ -94,7 +96,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: host}, reload_on_update=False
         )
-        return self.async_create_entry(title=init_data.name, data=import_info)
+        return self.async_create_entry(
+            title=init_data.name,
+            data={CONF_HOST: import_info[CONF_HOST]},
+            options={CONF_HOLD_TEMP: import_info[CONF_HOLD_TEMP]},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -112,10 +118,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST], CONF_HOLD_TEMP: False},
+                    updates={CONF_HOST: user_input[CONF_HOST]},
                     reload_on_update=False,
                 )
-                return self.async_create_entry(title=init_data.name, data=user_input)
+                return self.async_create_entry(
+                    title=init_data.name,
+                    data=user_input,
+                    options={CONF_HOLD_TEMP: False},
+                )
 
         return self.async_show_form(
             step_id="user",
