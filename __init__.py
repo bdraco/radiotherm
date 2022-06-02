@@ -63,11 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hold_temp = entry.data[CONF_HOLD_TEMP]
-    hass.data[DOMAIN][entry.entry_id] = RadioThermData(
-        coordinator, init_data, hold_temp
-    )
+    data = RadioThermData(coordinator, init_data, hold_temp)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # Wait to install the reload listener until everything was successfully initialized
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
