@@ -113,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 init_data = await validate_connection(self.hass, user_input[CONF_HOST])
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors[CONF_HOST] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
