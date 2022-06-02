@@ -168,14 +168,8 @@ class RadioThermostat(
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-    )
     _attr_temperature_unit = TEMP_FAHRENHEIT
     _attr_precision = PRECISION_HALVES
-    _attr_preset_modes = PRESET_MODES
 
     def __init__(self, data: RadioThermData) -> None:
         """Initialize the thermostat."""
@@ -193,12 +187,16 @@ class RadioThermostat(
             connections={(dr.CONNECTION_NETWORK_MAC, data.init_data.mac)},
         )
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
-        if self._is_model_ct80:
-            self._attr_fan_modes = CT80_FAN_OPERATION_LIST
-        else:
-            self._attr_fan_modes = CT30_FAN_OPERATION_LIST
-        # Fan circulate mode is only supported by the CT80 models.
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
         self._process_data()
+        if not self._is_model_ct80:
+            self._attr_fan_modes = CT30_FAN_OPERATION_LIST
+            return
+        self._attr_fan_modes = CT80_FAN_OPERATION_LIST
+        self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+        self._attr_preset_modes = PRESET_MODES
 
     @property
     def data(self) -> RadioThermUpdate:
@@ -236,7 +234,6 @@ class RadioThermostat(
         if self._is_model_ct80:
             self._attr_current_humidity = self.data.humidity
             self._attr_preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
-
         # Map thermostat values into various STATE_ flags.
         self._attr_current_temperature = data["temp"]
         self._attr_fan_mode = CODE_TO_FAN_MODE[data["fmode"]]
@@ -245,7 +242,6 @@ class RadioThermostat(
         }
         self._attr_hvac_mode = CODE_TO_TEMP_MODE[data["tmode"]]
         self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
-
         if self.hvac_mode == HVACMode.OFF:
             self._attr_hvac_action = None
         else:
